@@ -1,0 +1,61 @@
+﻿using Domain.Entities;
+using Infrastructure.Configuration;
+using Microsoft.EntityFrameworkCore;
+
+namespace Infrastructure.Context
+{
+    public class USContext : DbContext
+    {
+        public USContext(DbContextOptions options) : base(options)
+        {
+            ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
+        }
+        public DbSet<User> User { get; set; }
+        public DbSet<Role> Role { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new RoleConfiguration());
+
+            modelBuilder.Entity<Role>().HasData(
+                new Role { Id = 1, Name = "Admin" },
+                new Role { Id = 2, Name = "User" }
+             );
+
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    Id = 1,
+                    Avatar = "https://example.com/avatar1.png",
+                    Username = "admin",
+                    FullName = "Admin User",
+                    Email = "admin@gmail.com ",
+                    HashPassword = "hashedpassword1",
+                    CreatedAt = DateTime.UtcNow,
+                    Birthday = new DateOnly(1900, 1, 1),
+                    GithubLink = "",
+                    LinkedInLink = "",
+                    Bio = "Admin user bio",
+                    RoleId = 1                  
+                },
+                new User
+                {
+                    Id = 2,
+                    Avatar = "https://example.com/avatar2.png",
+                    Username = "user",
+                    FullName = "Regular User",
+                    Email = "user@gmail.com",
+                    HashPassword = "hashedpassword2",
+                    CreatedAt = DateTime.UtcNow,
+                    Birthday = new DateOnly(1900, 1, 1),
+                    GithubLink = "",
+                    LinkedInLink = "",
+                    Bio = "Regular user bio",
+                    RoleId = 2
+                }
+             );
+
+        }
+    }
+}
