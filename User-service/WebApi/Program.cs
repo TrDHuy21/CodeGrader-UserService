@@ -113,7 +113,7 @@ namespace WebApi
 
             app.MapControllers();
 
-            // Auto migration khi start app
+       /*     // Auto migration khi start app
             using (var scope = app.Services.CreateScope())
             {
                 var context = scope.ServiceProvider.GetRequiredService<USContext>();
@@ -129,7 +129,7 @@ namespace WebApi
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
                     logger.LogError(ex, "An error occurred while migrating the database.");
                 }
-            }
+            }*/
 
             app.Run();
         }

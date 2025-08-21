@@ -7,6 +7,7 @@ using Infrastructure.Context;
 using Infrastructure.UnitOfWork;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 
 namespace Application.Services.Implement
@@ -71,64 +72,86 @@ namespace Application.Services.Implement
 
         public async Task<Result<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
+            var errors = new List<ErrorField>();
+
+
             if (userUpdateDto == null)
-                {
-                    return Result<User>.Failure("User data is required.");
-                }
+            {
+                 return Result<User>.Failure("User data is required.");
+            }
 
-            // Check authorization (Unauthorized)     
-
-            // Retrieve user from DB
+            // chekck if user exists
             var existingUser = await _unitOfWork.UserRepositories.GetByIdAsync(userUpdateDto.Id);
             if (existingUser == null)
             {
                 return Result<User>.Failure("User not found.");
             }
-
-            // Check if Username is unique (if changed)
-            if (userUpdateDto.Username != existingUser.Username &&
-                await _uSContext.User.AnyAsync(u => u.Username == userUpdateDto.Username && u.Id != userUpdateDto.Id))
-            {
-                return Result<User>.Failure("Username already exists.");
-            }
-
-            // Check required fields
+          
+            // Check username 
             if (string.IsNullOrWhiteSpace(userUpdateDto.Username))
             {
-                return Result<User>.Failure("Username is required.");
+                errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username is required" });
             }
+            else
+            {
+                if(userUpdateDto.Username.Length < 3 || userUpdateDto.Username.Length > 20)
+                {
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3 - 20 characters" });             
+                }
+                if (!Regex.IsMatch(userUpdateDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
+                {
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username can only contain letters, numbers, and underscores" });
+                }
+                if (await _uSContext.User.AnyAsync(u => u.Username == userUpdateDto.Username && u.Id != userUpdateDto.Id))
+                {
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username already exists" });
+                }
+            }
+
+            // Check birthday
+            if (string.IsNullOrWhiteSpace(userUpdateDto.Birthday))
+            {
+                errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Bithday is required" });
+            }
+            else
+            {
+                if(!DateOnly.TryParse(userUpdateDto.Birthday, out var result))
+                {
+                    errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. Use 'yyyy-MM-dd'." });
+                }
+            }
+
+            // check fullname
             if (string.IsNullOrWhiteSpace(userUpdateDto.FullName))
             {
-                return Result<User>.Failure("Full name is required.");
+                errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "Full name is required" });
+            }
+            else
+            {
+                if (userUpdateDto.FullName.Length < 3 || userUpdateDto.FullName.Length > 50)
+                {
+                    errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
+                }
             }
 
-            // Map DTO to entity
+            if (errors.Any())
+            {
+                return Result<User>.Failure(errors);
+            }
+
             _mapper.Map(userUpdateDto, existingUser);
 
-            // Ensure HashPassword is not overwritten to null
-            if (string.IsNullOrWhiteSpace(existingUser.HashPassword))
-            {
-                return Result<User>.Failure("Password is required and cannot be empty.");
-            }
-
-            // Update and save
             try
-            {
+            {          
                 await _unitOfWork.UserRepositories.UpdateAsync(existingUser);
                 await _unitOfWork.SaveChangesAsync();
             }
-            catch (DbUpdateException ex)
+            catch (Exception)
             {
-                if (ex.InnerException?.Message.Contains("UNIQUE") ?? false)
-                {
-                    return Result<User>.Failure("Username already exists.");
-                }
-                return Result<User>.Failure($"Error updating user: {ex.InnerException?.Message}");
+                return Result<User>.Failure("An error occurred while updating the user.");
             }
             return Result<User>.Success(null, "User updated successfully.");
         }
-
-
     }
 
 }

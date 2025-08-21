@@ -20,6 +20,8 @@ namespace Infrastructure.Configuration
             builder.Property(r => r.Name)
                 .IsRequired()
                 .HasMaxLength(50);
+            builder.HasIndex(r => r.Name)
+                .IsUnique();
         }
     }
 }

@@ -97,93 +97,100 @@ namespace Application.Services.Implement
         public async Task<Result<UserViewDto>> Register(UserCreateDto userCreateDto)
         {
             if (userCreateDto == null)
-            {
                 return Result<UserViewDto>.Failure("User data is required");
-            }
 
-            var errors = new List<string>();
+            var errors = new List<ErrorField>();
 
             // Username validation
-            if (string.IsNullOrWhiteSpace(userCreateDto.Username) ||
-                userCreateDto.Username.Length < 3 || userCreateDto.Username.Length > 20 ||
-                !Regex.IsMatch(userCreateDto.Username, @"^[A-Za-z][A-Za-z0-9_]*$"))
+            if (string.IsNullOrEmpty(userCreateDto.Username))
             {
-                errors.Add("Username must be 3-20 characters, start with a letter, and contain only letters, numbers, or underscores");
+                errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username is required" });
             }
             else
             {
-                var existingUser = await _uSContext.User.FirstOrDefaultAsync(u => u.Username == userCreateDto.Username);
-                if (existingUser != null)
-                {
-                    errors.Add("Username already exists");
-                }
+                if (userCreateDto.Username.Length < 3 || userCreateDto.Username.Length > 20)
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3-20 characters" });
+
+                if (!Regex.IsMatch(userCreateDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username can only contain letters, numbers, and underscores" });
+
+                if (await _uSContext.User.AnyAsync(u => u.Username == userCreateDto.Username))
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username already exists" });
             }
 
             // Password validation
-            if (!Regex.IsMatch(userCreateDto.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
+            if (string.IsNullOrEmpty(userCreateDto.Password))
             {
-                errors.Add("Password must be at least 8 characters and include uppercase, lowercase, number, and special character");
-            }
-
-            // Email validation
-            if (!new EmailAddressAttribute().IsValid(userCreateDto.Email))
-            {
-                errors.Add("Invalid email format");
+                errors.Add(new ErrorField { Field = "Password", ErrorMessage = "Password is required" });
             }
             else
             {
-                var disposableDomains = new List<string> { "mailinator.com", "tempmail.com" };
-                var domain = userCreateDto.Email.Split('@')[1];
-                if (disposableDomains.Contains(domain))
+                if (!Regex.IsMatch(userCreateDto.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
                 {
-                    errors.Add("Disposable emails are not allowed");
+                    errors.Add(new ErrorField { Field = "Password", ErrorMessage = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character" });
                 }
+            }
 
-                var existingEmail = await _uSContext.User.FirstOrDefaultAsync(u => u.Email == userCreateDto.Email);
-                if (existingEmail != null)
+            // Email validation
+            if (string.IsNullOrEmpty(userCreateDto.Email))
+            {
+                errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Email is required" });
+            }   
+            else
+            {
+                if (!new EmailAddressAttribute().IsValid(userCreateDto.Email))
+                    errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Invalid email format. use (ngoc@example.com)" });
+                
+                if (await _uSContext.User.AnyAsync(u => u.Email == userCreateDto.Email))
+                    errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Email already exists" });
+            }
+
+            // Birthday validation
+            if (string.IsNullOrEmpty(userCreateDto.Birthday))
+            {
+                errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Birthday is required" });
+            }
+            else
+            {
+                if (!DateOnly.TryParse(userCreateDto.Birthday, out var result))
                 {
-                    errors.Add("Email already exists");
+                    errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. use yyyy-MM-dd" });
                 }
             }
 
             // FullName validation
-            if (!string.IsNullOrEmpty(userCreateDto.FullName) && userCreateDto.FullName.Length > 50)
+            if (string.IsNullOrEmpty(userCreateDto.FullName))
             {
-                errors.Add("Full name must be at most 50 characters");
+                errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName is required" });
             }
-
+            else
+            {
+                if (userCreateDto.FullName.Length < 3 || userCreateDto.FullName.Length > 50)
+                    errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
+            }
+     
             // Bio validation
-            if (!string.IsNullOrEmpty(userCreateDto.Bio) && userCreateDto.Bio.Length > 200)
-            {
-                errors.Add("Bio must be at most 200 characters");
-            }
+            if (userCreateDto.Bio.Length > 200)
+                errors.Add(new ErrorField { Field = "Bio", ErrorMessage = "Bio must be at most 200 characters" });
 
-            // LinkedIn link validation
-            if (!string.IsNullOrEmpty(userCreateDto.LinkedInLink))
-            {
-                if (!Uri.TryCreate(userCreateDto.LinkedInLink, UriKind.Absolute, out var uri) || !uri.Host.Contains("linkedin.com"))
-                {
-                    errors.Add("LinkedIn link must be a valid linkedin.com URL");
-                }
-            }
-
-            // Nếu có lỗi, trả về luôn
+            // Nếu có lỗi, trả về chi tiết
             if (errors.Any())
-            {
-                return Result<UserViewDto>.Failure(string.Join("; ", errors));
-            }
+                return Result<UserViewDto>.Failure(errors);
 
             // Map và lưu user
-            var user = _mapper.Map<User>(userCreateDto);
+            try
+            {
+                var user = _mapper.Map<User>(userCreateDto);
+                user.CreatedAt = DateTime.Now;
+                await _unitOfWork.UserRepositories.AddAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                return Result<UserViewDto>.Failure("An error occurred while registering the user");
+            }
 
-            await _unitOfWork.UserRepositories.AddAsync(user);
-            await _unitOfWork.SaveChangesAsync();
-
-            var userViewDto = _mapper.Map<UserViewDto>(user);
-            return Result<UserViewDto>.Success(userViewDto, "Register successful");
+            return Result<UserViewDto>.Success(null, "Register successful");
         }
-
-
-
     }
 }

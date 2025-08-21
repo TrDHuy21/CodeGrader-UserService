@@ -69,9 +69,21 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "LinkedInLink", "RoleId", "Username" },
                 values: new object[,]
                 {
-                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 20, 15, 20, 25, 935, DateTimeKind.Utc).AddTicks(9064), "admin@gmail.com ", "Admin User", "", "hashedpassword1", "", 1, "admin" },
-                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 20, 15, 20, 25, 935, DateTimeKind.Utc).AddTicks(9075), "user@gmail.com", "Regular User", "", "hashedpassword2", "", 2, "user" }
+                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(530), "admin@gmail.com ", "Admin User", "", "hashedpassword1", "", 1, "admin" },
+                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(539), "user@gmail.com", "Regular User", "", "hashedpassword2", "", 2, "user" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Role_Name",
+                table: "Role",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_Email",
+                table: "User",
+                column: "Email",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_User_RoleId",

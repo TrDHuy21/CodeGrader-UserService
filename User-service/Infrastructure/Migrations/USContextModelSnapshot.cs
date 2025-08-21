@@ -37,6 +37,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Role", (string)null);
 
                     b.HasData(
@@ -109,6 +112,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Email")
+                        .IsUnique();
+
                     b.HasIndex("RoleId");
 
                     b.HasIndex("Username")
@@ -123,7 +129,7 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar1.png",
                             Bio = "Admin user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 20, 15, 20, 25, 935, DateTimeKind.Utc).AddTicks(9064),
+                            CreatedAt = new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(530),
                             Email = "admin@gmail.com ",
                             FullName = "Admin User",
                             GithubLink = "",
@@ -138,7 +144,7 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar2.png",
                             Bio = "Regular user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 20, 15, 20, 25, 935, DateTimeKind.Utc).AddTicks(9075),
+                            CreatedAt = new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(539),
                             Email = "user@gmail.com",
                             FullName = "Regular User",
                             GithubLink = "",
