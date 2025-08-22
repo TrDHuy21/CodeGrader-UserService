@@ -71,7 +71,7 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
-                    b.Property<DateOnly>("Birthday")
+                    b.Property<DateOnly?>("Birthday")
                         .HasColumnType("date");
 
                     b.Property<DateTime>("CreatedAt")
@@ -129,7 +129,7 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar1.png",
                             Bio = "Admin user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(530),
+                            CreatedAt = new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4373),
                             Email = "admin@gmail.com ",
                             FullName = "Admin User",
                             GithubLink = "",
@@ -144,7 +144,7 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar2.png",
                             Bio = "Regular user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(539),
+                            CreatedAt = new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4382),
                             Email = "user@gmail.com",
                             FullName = "Regular User",
                             GithubLink = "",

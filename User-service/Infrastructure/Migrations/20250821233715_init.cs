@@ -38,7 +38,7 @@ namespace Infrastructure.Migrations
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     HashPassword = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Birthday = table.Column<DateOnly>(type: "date", nullable: false),
+                    Birthday = table.Column<DateOnly>(type: "date", nullable: true),
                     GithubLink = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     LinkedInLink = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     Bio = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
@@ -69,8 +69,8 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "LinkedInLink", "RoleId", "Username" },
                 values: new object[,]
                 {
-                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(530), "admin@gmail.com ", "Admin User", "", "hashedpassword1", "", 1, "admin" },
-                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 14, 26, 27, 612, DateTimeKind.Utc).AddTicks(539), "user@gmail.com", "Regular User", "", "hashedpassword2", "", 2, "user" }
+                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4373), "admin@gmail.com ", "Admin User", "", "hashedpassword1", "", 1, "admin" },
+                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4382), "user@gmail.com", "Regular User", "", "hashedpassword2", "", 2, "user" }
                 });
 
             migrationBuilder.CreateIndex(

@@ -9,7 +9,7 @@
         public string Email { get; set; }
         public string HashPassword { get; set; }    
         public DateTime CreatedAt { get; set; }
-        public DateOnly Birthday { get; set; }
+        public DateOnly? Birthday { get; set; }
         public string? GithubLink { get; set; }
         public string? LinkedInLink { get; set; }
         public string? Bio { get; set; }

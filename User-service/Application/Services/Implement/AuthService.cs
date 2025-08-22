@@ -144,20 +144,7 @@ namespace Application.Services.Implement
                 if (await _uSContext.User.AnyAsync(u => u.Email == userCreateDto.Email))
                     errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Email already exists" });
             }
-
-            // Birthday validation
-            if (string.IsNullOrEmpty(userCreateDto.Birthday))
-            {
-                errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Birthday is required" });
-            }
-            else
-            {
-                if (!DateOnly.TryParse(userCreateDto.Birthday, out var result))
-                {
-                    errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. use yyyy-MM-dd" });
-                }
-            }
-
+     
             // FullName validation
             if (string.IsNullOrEmpty(userCreateDto.FullName))
             {
@@ -167,11 +154,7 @@ namespace Application.Services.Implement
             {
                 if (userCreateDto.FullName.Length < 3 || userCreateDto.FullName.Length > 50)
                     errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
-            }
-     
-            // Bio validation
-            if (userCreateDto.Bio.Length > 200)
-                errors.Add(new ErrorField { Field = "Bio", ErrorMessage = "Bio must be at most 200 characters" });
+            }         
 
             // Nếu có lỗi, trả về chi tiết
             if (errors.Any())

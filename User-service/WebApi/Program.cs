@@ -113,24 +113,23 @@ namespace WebApi
 
             app.MapControllers();
 
-       /*     // Auto migration khi start app
-            using (var scope = app.Services.CreateScope())
-            {
-                var context = scope.ServiceProvider.GetRequiredService<USContext>();
-                try
+            // Auto migration khi start app
+        /*        using (var scope = app.Services.CreateScope())
                 {
-                    // Tự động tạo database và chạy migration
-                    context.Database.Migrate();
+                       var context = scope.ServiceProvider.GetRequiredService<USContext>();
+                       try
+                       {
+                           // Tự động tạo database và chạy migration
+                           context.Database.Migrate();
 
-                }
-                catch (Exception ex)
-                {
-                    // Log error nhưng không crash app
-                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred while migrating the database.");
-                }
-            }*/
-
+                       }
+                       catch (Exception ex)
+                       {
+                           // Log error nhưng không crash app
+                           var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                           logger.LogError(ex, "An error occurred while migrating the database.");
+                       }
+                }*/
             app.Run();
         }
     }

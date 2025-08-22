@@ -55,15 +55,17 @@ namespace Application.Services.Implement
             {
                 return Result<UserViewDto>.Failure("Username cannot be null or empty");
             }
+
             var user = await _unitOfWork.UserRepositories.GetProfileByUserName(username);
-            var userDto = _mapper.Map<UserViewDto>(user);
-            if(user == null)
+            if (user == null)
             {
                 return Result<UserViewDto>.Failure("User not found");
             }
 
+            var userDto = _mapper.Map<UserViewDto>(user);
             return Result<UserViewDto>.Success(userDto, null);
         }
+
 
         public Task<Result<User>> GetUserById(int id)
         {
@@ -109,13 +111,9 @@ namespace Application.Services.Implement
             }
 
             // Check birthday
-            if (string.IsNullOrWhiteSpace(userUpdateDto.Birthday))
+            if (!string.IsNullOrEmpty(userUpdateDto.Birthday))
             {
-                errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Bithday is required" });
-            }
-            else
-            {
-                if(!DateOnly.TryParse(userUpdateDto.Birthday, out var result))
+                if (!DateOnly.TryParse(userUpdateDto.Birthday, out var result))
                 {
                     errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. Use 'yyyy-MM-dd'." });
                 }
@@ -131,6 +129,10 @@ namespace Application.Services.Implement
                 if (userUpdateDto.FullName.Length < 3 || userUpdateDto.FullName.Length > 50)
                 {
                     errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
+                }
+                if (!Regex.IsMatch(userUpdateDto.FullName, @"^[a-zA-Z\s]+$"))
+                {
+                    errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "Full name can only contain letters and spaces" });
                 }
             }
 
