@@ -27,16 +27,16 @@ namespace Application.Services.Implement
 
         public async Task<Result<UserViewDto>> AddUser(UserCreateDto userCreateDto)
         {
-            if(userCreateDto == null)
+            if (userCreateDto == null)
             {
                 return Result<UserViewDto>.Failure("Invalid user data");
             }
 
-           var user = _mapper.Map<User>(userCreateDto);
-           await _unitOfWork.UserRepositories.AddAsync(user);
-           await _unitOfWork.SaveChangesAsync();
+            var user = _mapper.Map<User>(userCreateDto);
+            await _unitOfWork.UserRepositories.AddAsync(user);
+            await _unitOfWork.SaveChangesAsync();
 
-           return Result<UserViewDto>.Success(null, "User created successfully");    
+            return Result<UserViewDto>.Success(null, "User created successfully");
         }
 
         public Task<Result<User>> DeleteUser(int id)
@@ -66,7 +66,6 @@ namespace Application.Services.Implement
             return Result<UserViewDto>.Success(userDto, null);
         }
 
-
         public Task<Result<User>> GetUserById(int id)
         {
             throw new NotImplementedException();
@@ -79,7 +78,7 @@ namespace Application.Services.Implement
 
             if (userUpdateDto == null)
             {
-                 return Result<User>.Failure("User data is required.");
+                return Result<User>.Failure("User data is required.");
             }
 
             // chekck if user exists
@@ -88,7 +87,7 @@ namespace Application.Services.Implement
             {
                 return Result<User>.Failure("User not found.");
             }
-          
+
             // Check username 
             if (string.IsNullOrWhiteSpace(userUpdateDto.Username))
             {
@@ -96,9 +95,9 @@ namespace Application.Services.Implement
             }
             else
             {
-                if(userUpdateDto.Username.Length < 3 || userUpdateDto.Username.Length > 20)
+                if (userUpdateDto.Username.Length < 3 || userUpdateDto.Username.Length > 20)
                 {
-                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3 - 20 characters" });             
+                    errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3 - 20 characters" });
                 }
                 if (!Regex.IsMatch(userUpdateDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
                 {
@@ -144,7 +143,7 @@ namespace Application.Services.Implement
             _mapper.Map(userUpdateDto, existingUser);
 
             try
-            {          
+            {
                 await _unitOfWork.UserRepositories.UpdateAsync(existingUser);
                 await _unitOfWork.SaveChangesAsync();
             }
@@ -153,6 +152,57 @@ namespace Application.Services.Implement
                 return Result<User>.Failure("An error occurred while updating the user.");
             }
             return Result<User>.Success(null, "User updated successfully.");
+        }
+
+        public async Task<Result<User>> ChangePassword(int userId, ChangePasswordDto changePasswordDto)
+        {
+            var errors = new List<ErrorField>();
+
+            // check userid 
+            if (userId <= 0)
+            {
+                errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User ID is required" });
+            }
+            else
+            {
+                bool userExists = await _uSContext.User.AnyAsync(u => u.Id == userId);
+                if (!userExists)
+                {
+                    errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User not found" });
+                }
+            }
+
+            // check current password
+            if (string.IsNullOrWhiteSpace(changePasswordDto.CurrentPassword))
+            {
+                errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is required" });
+            }
+            else
+            {
+                var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
+                if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.HashPassword))
+                {
+                    errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is not correct" });
+                }
+            }
+            // check new password
+            if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+            {
+                errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "NewPassword is required" });
+            }
+            else
+            {
+                if (!Regex.IsMatch(changePasswordDto.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
+                {
+                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "Invalid NewPassword format" });
+                }
+            }
+            if (errors.Any())
+            {
+                return Result<User>.Failure(errors);
+            }
+            return Result<User>.Success(null, "Change password successful");
+
         }
     }
 

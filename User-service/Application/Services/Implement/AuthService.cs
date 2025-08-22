@@ -32,7 +32,6 @@ namespace Application.Services.Implement
             _unitOfWork = unitOfWork;
             _mapper = mapper;
         }
-
         public async Task<Result<LoginResponse>> Login([FromBody] LoginDto loginDto)
         {
             if (string.IsNullOrEmpty(loginDto.UserNameOrEmail) || string.IsNullOrEmpty(loginDto.Password))
@@ -93,7 +92,6 @@ namespace Application.Services.Implement
                 }
             }, "Login successful");
         }
-
         public async Task<Result<UserViewDto>> Register(UserCreateDto userCreateDto)
         {
             if (userCreateDto == null)
@@ -175,5 +173,6 @@ namespace Application.Services.Implement
 
             return Result<UserViewDto>.Success(null, "Register successful");
         }
+
     }
 }

@@ -12,5 +12,6 @@ namespace Application.Services.Interface
         Task<Result<User>> UpdateUser(UserUpdateDto userUpdateDto);
         Task<Result<User>> DeleteUser(int id);
         Task<Result<UserViewDto>> GetProfileByUsername(string username);
+        Task<Result<User>> ChangePassword(int userId, ChangePasswordDto changePasswordDto);
     }
 }
