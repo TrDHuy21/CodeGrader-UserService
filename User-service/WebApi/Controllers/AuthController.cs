@@ -1,5 +1,6 @@
 ﻿using Application.Dtos.AuthDto;
 using Application.Dtos.UserDto;
+using Application.Services.Implement;
 using Application.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,6 +8,7 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -24,6 +26,30 @@ namespace WebApi.Controllers
         public async Task<IActionResult> Register([FromBody] UserCreateDto userCreateDto)
         {
             var result = await _authService.Register(userCreateDto);
+            return Ok(result);
+        }
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> FogotPassword(FogotPasswordDto fogotPasswordDto)
+        {
+            var result = await _authService.ForgotPassword(fogotPasswordDto);
+            return Ok(result);
+        }
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> VerifyOtpAndResetPassword(ResetPasswordDto resetPasswordDto)
+        {
+            var result = await _authService.VerifyOtpAndResetPassword(resetPasswordDto);
+            return Ok(result);
+        }
+        [HttpPost("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(ConfirmEmailDto confirmEmailDto)
+        {
+            var result = await _authService.ConfirmEmail(confirmEmailDto);
+            return Ok(result);
+        }
+        [HttpPost("send-otp-email")]
+        public async Task<IActionResult> SendOtpEmail(FogotPasswordDto fogotPasswordDto)
+        {
+            var result = await _authService.SendOtpEmail(fogotPasswordDto);
             return Ok(result);
         }
     }

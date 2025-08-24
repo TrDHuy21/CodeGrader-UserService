@@ -5,7 +5,6 @@ using Common;
 using Domain.Entities;
 using Infrastructure.Context;
 using Infrastructure.UnitOfWork;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
@@ -17,12 +16,13 @@ namespace Application.Services.Implement
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
         private readonly USContext _uSContext;
-
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, USContext uSContext)
+        private readonly ICloudStorageService _cloudStorageService;
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, USContext uSContext, ICloudStorageService cloudStorageService)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _uSContext = uSContext;
+            _cloudStorageService = cloudStorageService;
         }
 
         public async Task<Result<UserViewDto>> AddUser(UserCreateDto userCreateDto)
@@ -38,17 +38,14 @@ namespace Application.Services.Implement
 
             return Result<UserViewDto>.Success(null, "User created successfully");
         }
-
         public Task<Result<User>> DeleteUser(int id)
         {
             throw new NotImplementedException();
         }
-
         public Task<Result<IEnumerable<User>>> GetAllUser()
         {
             throw new NotImplementedException();
         }
-
         public async Task<Result<UserViewDto>> GetProfileByUsername(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -63,23 +60,15 @@ namespace Application.Services.Implement
             }
 
             var userDto = _mapper.Map<UserViewDto>(user);
-            return Result<UserViewDto>.Success(userDto, null);
+            return Result<UserViewDto>.Success(userDto, "Profile fetched successfully");
         }
-
         public Task<Result<User>> GetUserById(int id)
         {
             throw new NotImplementedException();
         }
-
         public async Task<Result<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
             var errors = new List<ErrorField>();
-
-
-            if (userUpdateDto == null)
-            {
-                return Result<User>.Failure("User data is required.");
-            }
 
             // chekck if user exists
             var existingUser = await _unitOfWork.UserRepositories.GetByIdAsync(userUpdateDto.Id);
@@ -153,56 +142,91 @@ namespace Application.Services.Implement
             }
             return Result<User>.Success(null, "User updated successfully.");
         }
-
         public async Task<Result<User>> ChangePassword(int userId, ChangePasswordDto changePasswordDto)
         {
             var errors = new List<ErrorField>();
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
 
             // check userid 
-            if (userId <= 0)
+            if (user == null)
             {
-                errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User ID is required" });
+                errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User not found" });
             }
             else
             {
-                bool userExists = await _uSContext.User.AnyAsync(u => u.Id == userId);
-                if (!userExists)
+                // check current password
+                if (string.IsNullOrWhiteSpace(changePasswordDto.CurrentPassword))
                 {
-                    errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User not found" });
+                    errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is required" });
+                }
+                else
+                {
+                    if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.HashPassword))
+                    {
+                        errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is not correct" });
+                    }
+                }
+                // check new password
+                if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+                {
+                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "NewPassword is required" });
+                }
+                else
+                {
+                    if (!Regex.IsMatch(changePasswordDto.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
+                    {
+                        errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "Password must have at least 8 characters, including uppercase, lowercase, number, and special character." });
+                    }
                 }
             }
 
-            // check current password
-            if (string.IsNullOrWhiteSpace(changePasswordDto.CurrentPassword))
-            {
-                errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is required" });
-            }
-            else
-            {
-                var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
-                if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.HashPassword))
-                {
-                    errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is not correct" });
-                }
-            }
-            // check new password
-            if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
-            {
-                errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "NewPassword is required" });
-            }
-            else
-            {
-                if (!Regex.IsMatch(changePasswordDto.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
-                {
-                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "Invalid NewPassword format" });
-                }
-            }
+
             if (errors.Any())
             {
                 return Result<User>.Failure(errors);
             }
-            return Result<User>.Success(null, "Change password successful");
 
+            user.HashPassword = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
+
+            try
+            {
+                await _unitOfWork.UserRepositories.UpdateAsync(user);
+                await _unitOfWork.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+                return Result<User>.Failure("An error occurred while changing the password.");
+            }
+        
+            return Result<User>.Success(null, "Change password successful");
+        }
+
+        public async Task<Result<string>> UpdateAvatar(UpdateAvatarDto upDateAvatarDto)
+        {
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(upDateAvatarDto.UserId);
+
+            if(user == null)
+            {
+                return Result<string>.Failure("User not found");
+            }
+            if (upDateAvatarDto.Avatar == null || upDateAvatarDto.Avatar.Length == 0)
+            {
+                return Result<string>.Failure("Invalid avatar file");
+            }
+
+            var imageUrl = await _cloudStorageService.UploadFileAsync(upDateAvatarDto.Avatar);
+
+            if (!imageUrl.IsSuccess)
+            {
+                return Result<string>.Failure($"Failed to upload avatar: {imageUrl.Data}");
+            }
+
+            user.Avatar = imageUrl.Data;
+            await _unitOfWork.UserRepositories.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+
+            return Result<string>.Success(imageUrl.Data, "Update avatar successful");
         }
     }
 

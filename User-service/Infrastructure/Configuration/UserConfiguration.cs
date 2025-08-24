@@ -32,6 +32,10 @@ namespace Infrastructure.Configuration
             builder.HasIndex(u => u.Email)
                 .IsUnique();
 
+            builder.Property(u => u.IsEmailConfirmed)
+                .IsRequired()
+                .HasDefaultValue(false);
+
             builder.Property(u => u.HashPassword)
                 .IsRequired()
                 .HasMaxLength(255);

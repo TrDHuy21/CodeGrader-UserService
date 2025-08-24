@@ -29,6 +29,8 @@ namespace WebApi
             // add services
             builder.Services.AddTransient<IUserService,UserService>();
             builder.Services.AddTransient<IAuthService, AuthService>();
+            builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Services.AddTransient<ICloudStorageService, CloudStorageService>();
 
             // add mapper
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -37,6 +39,7 @@ namespace WebApi
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddMemoryCache();
 
             // get jwt
             var jwt = builder.Configuration.GetSection("Jwt");

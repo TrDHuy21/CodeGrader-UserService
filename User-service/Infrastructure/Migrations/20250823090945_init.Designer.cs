@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(USContext))]
-    [Migration("20250821233715_init")]
+    [Migration("20250823090945_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -99,6 +99,11 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<bool>("IsEmailConfirmed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("LinkedInLink")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
@@ -132,11 +137,12 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar1.png",
                             Bio = "Admin user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4373),
+                            CreatedAt = new DateTime(2025, 8, 23, 9, 9, 45, 492, DateTimeKind.Utc).AddTicks(1773),
                             Email = "admin@gmail.com ",
                             FullName = "Admin User",
                             GithubLink = "",
-                            HashPassword = "hashedpassword1",
+                            HashPassword = "$2a$11$CvBnz6qUTT/nMdDGmg8xveMozm4hF6ribhboSAlDPdB6.zEOQ8tIO",
+                            IsEmailConfirmed = true,
                             LinkedInLink = "",
                             RoleId = 1,
                             Username = "admin"
@@ -147,11 +153,12 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar2.png",
                             Bio = "Regular user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 21, 23, 37, 13, 794, DateTimeKind.Utc).AddTicks(4382),
+                            CreatedAt = new DateTime(2025, 8, 23, 9, 9, 45, 608, DateTimeKind.Utc).AddTicks(4346),
                             Email = "user@gmail.com",
                             FullName = "Regular User",
                             GithubLink = "",
-                            HashPassword = "hashedpassword2",
+                            HashPassword = "$2a$11$C.s6dKOA9qpuw7Hz6hnIzOZQbG0s50UekwMi.SfkTR8uHNk1aLF42",
+                            IsEmailConfirmed = true,
                             LinkedInLink = "",
                             RoleId = 2,
                             Username = "user"

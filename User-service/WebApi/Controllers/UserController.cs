@@ -1,4 +1,5 @@
 ﻿using Application.Dtos.UserDto;
+using Application.Services.Implement;
 using Application.Services.Interface;
 using Common;
 using Domain.Entities;
@@ -19,16 +20,32 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("profile/{username}")]
-        public async Task<IActionResult> Profile(string username)
+        public async Task<IActionResult> Profile([FromRoute] string username)
         {
             var result = await _userService.GetProfileByUsername(username);
             return Ok(result);
         }
+
         [Authorize]
         [HttpPut("profile/update-info")]
         public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateDto userUpdateDto)
         {
             var result = await _userService.UpdateUser(userUpdateDto);
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword([FromQuery] int userId, [FromBody] ChangePasswordDto changePasswordDto)
+        {
+            var result = await _userService.ChangePassword(userId, changePasswordDto);
+            return Ok(result);
+        }
+        //[Authorize]
+        [HttpPut("update-avatar")]
+        public async Task<IActionResult> UpdateAvatar([FromForm] UpdateAvatarDto upDateAvatarDto)
+        {
+            var result = await _userService.UpdateAvatar(upDateAvatarDto);
             return Ok(result);
         }
 

@@ -21,6 +21,7 @@ namespace Application.Mapping
                 .ForMember(x => x.Birthday, 
                 opt => opt.MapFrom(x => string.IsNullOrEmpty(x.Birthday) ? (DateOnly?)null : DateOnly.ParseExact(x.Birthday, "yyyy-MM-dd")));
             CreateMap<User, UserUpdateDto>();
+
         }
     }
 }
