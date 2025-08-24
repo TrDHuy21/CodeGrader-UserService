@@ -41,7 +41,7 @@ namespace WebApi.Controllers
             var result = await _userService.ChangePassword(userId, changePasswordDto);
             return Ok(result);
         }
-        //[Authorize]
+        [Authorize]
         [HttpPut("update-avatar")]
         public async Task<IActionResult> UpdateAvatar([FromForm] UpdateAvatarDto upDateAvatarDto)
         {
