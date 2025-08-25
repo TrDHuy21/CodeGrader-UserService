@@ -28,28 +28,6 @@ namespace Application.Services.Implement
             _cloudStorageService = cloudStorageService;
             _httpContextAccessor = httpContextAccessor;
         }
-
-        public async Task<Result<UserViewDto>> AddUser(UserCreateDto userCreateDto)
-        {
-            if (userCreateDto == null)
-            {
-                return Result<UserViewDto>.Failure("Invalid user data");
-            }
-
-            var user = _mapper.Map<User>(userCreateDto);
-            await _unitOfWork.UserRepositories.AddAsync(user);
-            await _unitOfWork.SaveChangesAsync();
-
-            return Result<UserViewDto>.Success(null, "User created successfully");
-        }
-        public Task<Result<User>> DeleteUser(int id)
-        {
-            throw new NotImplementedException();
-        }
-        public Task<Result<IEnumerable<User>>> GetAllUser()
-        {
-            throw new NotImplementedException();
-        }
         public async Task<Result<UserViewDto>> GetProfileByUsername(string username)
         {
             if (string.IsNullOrEmpty(username))
@@ -66,22 +44,22 @@ namespace Application.Services.Implement
             var userDto = _mapper.Map<UserViewDto>(user);
             return Result<UserViewDto>.Success(userDto, "Profile fetched successfully");
         }
-        public Task<Result<User>> GetUserById(int id)
-        {
-            throw new NotImplementedException();
-        }
         public async Task<Result<User>> UpdateUser(UserUpdateDto userUpdateDto)
         {
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;
+            if (userIdClaim == null)
+                return Result<User>.Failure("Invalid token");
+
+            var userId = int.Parse(userIdClaim);
+
             var errors = new List<ErrorField>();
 
-            // chekck if user exists
-            var existingUser = await _unitOfWork.UserRepositories.GetByIdAsync(userUpdateDto.Id);
+            // Lấy user hiện tại
+            var existingUser = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
             if (existingUser == null)
-            {
                 return Result<User>.Failure("User not found.");
-            }
 
-            // Check username 
+            // Validate Username
             if (string.IsNullOrWhiteSpace(userUpdateDto.Username))
             {
                 errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username is required" });
@@ -89,29 +67,16 @@ namespace Application.Services.Implement
             else
             {
                 if (userUpdateDto.Username.Length < 3 || userUpdateDto.Username.Length > 20)
-                {
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3 - 20 characters" });
-                }
+
                 if (!Regex.IsMatch(userUpdateDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
-                {
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username can only contain letters, numbers, and underscores" });
-                }
-                if (await _uSContext.User.AnyAsync(u => u.Username == userUpdateDto.Username && u.Id != userUpdateDto.Id))
-                {
+
+                if (await _uSContext.User.AnyAsync(u => u.Username == userUpdateDto.Username && u.Id != userId))
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username already exists" });
-                }
             }
 
-            // Check birthday
-            if (!string.IsNullOrEmpty(userUpdateDto.Birthday))
-            {
-                if (!DateOnly.TryParse(userUpdateDto.Birthday, out var result))
-                {
-                    errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. Use 'yyyy-MM-dd'." });
-                }
-            }
-
-            // check fullname
+            // Validate FullName
             if (string.IsNullOrWhiteSpace(userUpdateDto.FullName))
             {
                 errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "Full name is required" });
@@ -119,21 +84,52 @@ namespace Application.Services.Implement
             else
             {
                 if (userUpdateDto.FullName.Length < 3 || userUpdateDto.FullName.Length > 50)
-                {
-                    errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
-                }
+                    errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "Full name must be 3-50 characters" });
+
                 if (!Regex.IsMatch(userUpdateDto.FullName, @"^[a-zA-Z\s]+$"))
-                {
                     errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "Full name can only contain letters and spaces" });
+            }
+
+            // Validate Birthday
+            DateOnly? birthday = null;
+            if (!string.IsNullOrEmpty(userUpdateDto.Birthday))
+            {
+                if (!DateOnly.TryParse(userUpdateDto.Birthday, out var parsed))
+                {
+                    errors.Add(new ErrorField { Field = "Birthday", ErrorMessage = "Invalid birthday format. Use 'yyyy-MM-dd'." });
                 }
+                else
+                {
+                    birthday = parsed;
+                }
+            }
+
+            // Validate Bio
+            if (!string.IsNullOrEmpty(userUpdateDto.Bio) && userUpdateDto.Bio.Length > 500)
+            {
+                errors.Add(new ErrorField { Field = "Bio", ErrorMessage = "Bio cannot exceed 500 characters" });
+            }
+            // Validate GithubLink
+            if (!string.IsNullOrEmpty(userUpdateDto.GithubLink) && !Uri.IsWellFormedUriString(userUpdateDto.GithubLink, UriKind.Absolute))
+            {
+                errors.Add(new ErrorField { Field = "GithubLink", ErrorMessage = "Invalid GitHub link" });
+            }
+            // Validate LinkedInLink
+            if (!string.IsNullOrEmpty(userUpdateDto.LinkedInLink) && !Uri.IsWellFormedUriString(userUpdateDto.LinkedInLink, UriKind.Absolute))
+            {
+                errors.Add(new ErrorField { Field = "LinkedInLink", ErrorMessage = "Invalid LinkedIn link" });
             }
 
             if (errors.Any())
-            {
                 return Result<User>.Failure(errors);
-            }
 
-            _mapper.Map(userUpdateDto, existingUser);
+
+            existingUser.Username = userUpdateDto.Username;
+            existingUser.FullName = userUpdateDto.FullName;
+            existingUser.Birthday = birthday;
+            existingUser.Bio = userUpdateDto.Bio;
+            existingUser.GithubLink = userUpdateDto.GithubLink;
+            existingUser.LinkedInLink = userUpdateDto.LinkedInLink;
 
             try
             {
@@ -144,8 +140,10 @@ namespace Application.Services.Implement
             {
                 return Result<User>.Failure("An error occurred while updating the user.");
             }
+
             return Result<User>.Success(null, "User updated successfully.");
         }
+
         public async Task<Result<User>> ChangePassword(ChangePasswordDto changePasswordDto)
         {
             var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;

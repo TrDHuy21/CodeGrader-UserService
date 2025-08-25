@@ -42,7 +42,7 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPut("update-avatar")]
         public async Task<IActionResult> UpdateAvatar([FromForm] UpdateAvatarDto upDateAvatarDto)
         {

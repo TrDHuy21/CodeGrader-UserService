@@ -23,9 +23,9 @@ namespace WebApi.Controllers
             return Ok(result);
         }
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] UserCreateDto userCreateDto)
+        public async Task<IActionResult> Register([FromBody] RegisterDto registerDto)
         {
-            var result = await _authService.Register(userCreateDto);
+            var result = await _authService.Register(registerDto);
             return Ok(result);
         }
         [HttpPost("forgot-password")]
@@ -34,6 +34,7 @@ namespace WebApi.Controllers
             var result = await _authService.ForgotPassword(fogotPasswordDto);
             return Ok(result);
         }
+
         [HttpPost("reset-password")]
         public async Task<IActionResult> VerifyOtpAndResetPassword(ResetPasswordDto resetPasswordDto)
         {
@@ -46,6 +47,7 @@ namespace WebApi.Controllers
             var result = await _authService.ConfirmEmail(confirmEmailDto);
             return Ok(result);
         }
+
         [HttpPost("send-otp-email")]
         public async Task<IActionResult> SendOtpEmail(FogotPasswordDto fogotPasswordDto)
         {

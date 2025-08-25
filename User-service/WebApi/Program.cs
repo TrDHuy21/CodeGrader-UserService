@@ -31,6 +31,7 @@ namespace WebApi
             builder.Services.AddTransient<IUserService,UserService>();
             builder.Services.AddTransient<IAuthService, AuthService>();
             builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Services.AddTransient<IAdminService, AdminService>();
             builder.Services.AddTransient<ICloudStorageService, CloudStorageService>();
 
             // add mapper

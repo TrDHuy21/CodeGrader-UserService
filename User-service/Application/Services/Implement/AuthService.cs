@@ -62,6 +62,10 @@ namespace Application.Services.Implement
             {
                 return Result<LoginResponse>.Failure("Please confirm your email before logging in");
             }
+            if (!user.IsActive)
+            {
+                return Result<LoginResponse>.Failure("Your account has been deactivated. Please contact support.");
+            }
 
             var roleName = _uSContext.Role
                 .Where(ur => ur.Id == user.RoleId)
@@ -82,7 +86,7 @@ namespace Application.Services.Implement
                 {
                     new Claim("Id", user.Id.ToString()),
                     new Claim("Username", user.Username),
-                    new Claim("Role", roleName)
+                    new Claim(ClaimTypes.Role, roleName)
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
                 Audience = _configuration["Jwt:Audience"],
@@ -110,62 +114,62 @@ namespace Application.Services.Implement
                 }
             }, "Login successful");
         }
-        public async Task<Result<UserViewDto>> Register(UserCreateDto userCreateDto)
+        public async Task<Result<UserViewDto>> Register(RegisterDto registerDto)
         {
             var errors = new List<ErrorField>();
 
             // Username validation
-            if (string.IsNullOrEmpty(userCreateDto.Username))
+            if (string.IsNullOrEmpty(registerDto.Username))
             {
                 errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username is required" });
             }
             else
             {
-                if (userCreateDto.Username.Length < 3 || userCreateDto.Username.Length > 20)
+                if (registerDto.Username.Length < 3 || registerDto.Username.Length > 20)
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username must be 3-20 characters" });
 
-                if (!Regex.IsMatch(userCreateDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
+                if (!Regex.IsMatch(registerDto.Username, @"^[a-zA-Z][A-Za-z0-9_]*$"))
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username can only contain letters, numbers, and underscores" });
 
-                if (await _uSContext.User.AnyAsync(u => u.Username == userCreateDto.Username))
+                if (await _uSContext.User.AnyAsync(u => u.Username == registerDto.Username))
                     errors.Add(new ErrorField { Field = "Username", ErrorMessage = "Username already exists" });
             }
 
             // Password validation
-            if (string.IsNullOrEmpty(userCreateDto.Password))
+            if (string.IsNullOrEmpty(registerDto.Password))
             {
                 errors.Add(new ErrorField { Field = "Password", ErrorMessage = "Password is required" });
             }
             else
             {
-                if (!Regex.IsMatch(userCreateDto.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
+                if (!Regex.IsMatch(registerDto.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
                 {
                     errors.Add(new ErrorField { Field = "Password", ErrorMessage = "Password must have at least 8 characters, including uppercase, lowercase, number, and special character." });
                 }
             }
 
             // Email validation
-            if (string.IsNullOrEmpty(userCreateDto.Email))
+            if (string.IsNullOrEmpty(registerDto.Email))
             {
                 errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Email is required" });
             }   
             else
             {
-                if (!new EmailAddressAttribute().IsValid(userCreateDto.Email))
+                if (!new EmailAddressAttribute().IsValid(registerDto.Email))
                     errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Invalid email format. use (ngoc@example.com)" });
                 
-                if (await _uSContext.User.AnyAsync(u => u.Email == userCreateDto.Email))
+                if (await _uSContext.User.AnyAsync(u => u.Email == registerDto.Email))
                     errors.Add(new ErrorField { Field = "Email", ErrorMessage = "Email already exists" });
             }
      
             // FullName validation
-            if (string.IsNullOrEmpty(userCreateDto.FullName))
+            if (string.IsNullOrEmpty(registerDto.FullName))
             {
                 errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName is required" });
             }
             else
             {
-                if (userCreateDto.FullName.Length < 3 || userCreateDto.FullName.Length > 50)
+                if (registerDto.FullName.Length < 3 || registerDto.FullName.Length > 50)
                     errors.Add(new ErrorField { Field = "FullName", ErrorMessage = "FullName must be 3-50 characters" });
             }         
 
@@ -176,9 +180,10 @@ namespace Application.Services.Implement
             // Map và lưu user
             try
             {
-                var user = _mapper.Map<User>(userCreateDto);
-                user.CreatedAt = DateTime.Now;
+                var user = _mapper.Map<User>(registerDto);
+                user.CreatedAt = DateTime.UtcNow;
                 user.IsEmailConfirmed = false;
+                user.IsActive = true;
 
                 await _unitOfWork.UserRepositories.AddAsync(user);
                 await _unitOfWork.SaveChangesAsync();
@@ -189,9 +194,9 @@ namespace Application.Services.Implement
             }
             // Send verification email
             var otp = new Random().Next(100000,999999).ToString();
-            _memoryCache.Set(userCreateDto.Email, otp, TimeSpan.FromMinutes(1.5));
+            _memoryCache.Set(registerDto.Email, otp, TimeSpan.FromMinutes(10));
 
-            await _emailService.SendEmailAsync(userCreateDto.Email, "Verify your email", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
+            await _emailService.SendEmailAsync(registerDto.Email, "Verify your email", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 
             return Result<UserViewDto>.Success(null, "Register successful! Please check your email to verify your account.");
         }
@@ -205,7 +210,7 @@ namespace Application.Services.Implement
 
             var otp = new Random().Next(100000, 999999).ToString();
 
-            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(1.5));
+            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(10));
 
             await _emailService.SendEmailAsync(fogotPasswordDto.Email, "Password Reset Code", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 
@@ -318,7 +323,7 @@ namespace Application.Services.Implement
             }
             var otp = new Random().Next(100000,999999).ToString();
 
-            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(1.5));
+            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(10));
 
             await _emailService.SendEmailAsync(fogotPasswordDto.Email, "Verify your email", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 
