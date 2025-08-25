@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using WebApi.Midleware;
 
 namespace WebApi
 {
@@ -40,6 +41,7 @@ namespace WebApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddMemoryCache();
+            builder.Services.AddHttpContextAccessor();
 
             // get jwt
             var jwt = builder.Configuration.GetSection("Jwt");
@@ -112,6 +114,7 @@ namespace WebApi
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
+            app.UseMiddleware<TokenValidationMidleware>();
             app.UseAuthorization();
 
             app.MapControllers();

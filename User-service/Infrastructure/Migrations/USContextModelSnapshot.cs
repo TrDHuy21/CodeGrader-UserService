@@ -96,6 +96,11 @@ namespace Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("IsEmailConfirmed")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -104,6 +109,9 @@ namespace Infrastructure.Migrations
                     b.Property<string>("LinkedInLink")
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime?>("PasswordChangedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("RoleId")
                         .ValueGeneratedOnAdd()
@@ -134,11 +142,12 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar1.png",
                             Bio = "Admin user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 23, 9, 9, 45, 492, DateTimeKind.Utc).AddTicks(1773),
+                            CreatedAt = new DateTime(2025, 8, 25, 7, 22, 44, 124, DateTimeKind.Utc).AddTicks(1142),
                             Email = "admin@gmail.com ",
                             FullName = "Admin User",
                             GithubLink = "",
-                            HashPassword = "$2a$11$CvBnz6qUTT/nMdDGmg8xveMozm4hF6ribhboSAlDPdB6.zEOQ8tIO",
+                            HashPassword = "$2a$11$mOtkdH9PFIixNDPH0X2rVO8S5tcuLfx2M9c6rSt7dpD5lPOPl.SWC",
+                            IsActive = true,
                             IsEmailConfirmed = true,
                             LinkedInLink = "",
                             RoleId = 1,
@@ -150,11 +159,12 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar2.png",
                             Bio = "Regular user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 23, 9, 9, 45, 608, DateTimeKind.Utc).AddTicks(4346),
+                            CreatedAt = new DateTime(2025, 8, 25, 7, 22, 44, 243, DateTimeKind.Utc).AddTicks(7087),
                             Email = "user@gmail.com",
                             FullName = "Regular User",
                             GithubLink = "",
-                            HashPassword = "$2a$11$C.s6dKOA9qpuw7Hz6hnIzOZQbG0s50UekwMi.SfkTR8uHNk1aLF42",
+                            HashPassword = "$2a$11$YTbIuNJmntsCoXPaVMjkeuwT/l8J6Q8Jye.kxDCX3hsowuMp6jhEu",
+                            IsActive = true,
                             IsEmailConfirmed = true,
                             LinkedInLink = "",
                             RoleId = 2,

@@ -189,7 +189,7 @@ namespace Application.Services.Implement
             }
             // Send verification email
             var otp = new Random().Next(100000,999999).ToString();
-            _memoryCache.Set(userCreateDto.Email, otp, TimeSpan.FromMinutes(10));
+            _memoryCache.Set(userCreateDto.Email, otp, TimeSpan.FromMinutes(1.5));
 
             await _emailService.SendEmailAsync(userCreateDto.Email, "Verify your email", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 
@@ -205,7 +205,7 @@ namespace Application.Services.Implement
 
             var otp = new Random().Next(100000, 999999).ToString();
 
-            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(10));
+            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(1.5));
 
             await _emailService.SendEmailAsync(fogotPasswordDto.Email, "Password Reset Code", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 
@@ -318,7 +318,7 @@ namespace Application.Services.Implement
             }
             var otp = new Random().Next(100000,999999).ToString();
 
-            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(10));
+            _memoryCache.Set(fogotPasswordDto.Email, otp, TimeSpan.FromMinutes(1.5));
 
             await _emailService.SendEmailAsync(fogotPasswordDto.Email, "Verify your email", $"Your OTP code is: <b>{otp}</b>. It will expire in 10 minutes");
 

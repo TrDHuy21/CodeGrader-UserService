@@ -13,6 +13,8 @@
         public DateOnly? Birthday { get; set; }
         public string? GithubLink { get; set; }
         public string? LinkedInLink { get; set; }
+        public DateTime? PasswordChangedAt { get; set; }
+        public bool IsActive { get; set; }
         public string? Bio { get; set; }
         public int RoleId { get; set; }
         public Role Role { get; set; }

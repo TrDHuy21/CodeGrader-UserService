@@ -12,6 +12,7 @@
         public string Bio { get; set; }
         public string GithubLink { get; set; }
         public string LinkedinLink { get; set; }
+        public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

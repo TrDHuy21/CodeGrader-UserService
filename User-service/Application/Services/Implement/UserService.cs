@@ -5,6 +5,7 @@ using Common;
 using Domain.Entities;
 using Infrastructure.Context;
 using Infrastructure.UnitOfWork;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 
@@ -17,12 +18,15 @@ namespace Application.Services.Implement
         private readonly IMapper _mapper;
         private readonly USContext _uSContext;
         private readonly ICloudStorageService _cloudStorageService;
-        public UserService(IUnitOfWork unitOfWork, IMapper mapper, USContext uSContext, ICloudStorageService cloudStorageService)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public UserService(IUnitOfWork unitOfWork, IMapper mapper, USContext uSContext, ICloudStorageService cloudStorageService, IHttpContextAccessor httpContextAccessor)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
             _uSContext = uSContext;
             _cloudStorageService = cloudStorageService;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Result<UserViewDto>> AddUser(UserCreateDto userCreateDto)
@@ -142,51 +146,40 @@ namespace Application.Services.Implement
             }
             return Result<User>.Success(null, "User updated successfully.");
         }
-        public async Task<Result<User>> ChangePassword(int userId, ChangePasswordDto changePasswordDto)
+        public async Task<Result<User>> ChangePassword(ChangePasswordDto changePasswordDto)
         {
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;
+            if (userIdClaim == null)
+            {
+                return Result<User>.Failure("Invalid token");
+            }
+
+            var userId = int.Parse(userIdClaim);
             var errors = new List<ErrorField>();
             var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
 
-            // check userid 
             if (user == null)
             {
                 errors.Add(new ErrorField { Field = "UserId", ErrorMessage = "User not found" });
             }
             else
             {
-                // check current password
                 if (string.IsNullOrWhiteSpace(changePasswordDto.CurrentPassword))
-                {
                     errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is required" });
-                }
-                else
-                {
-                    if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.HashPassword))
-                    {
-                        errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is not correct" });
-                    }
-                }
-                // check new password
-                if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
-                {
-                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "NewPassword is required" });
-                }
-                else
-                {
-                    if (!Regex.IsMatch(changePasswordDto.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
-                    {
-                        errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "Password must have at least 8 characters, including uppercase, lowercase, number, and special character." });
-                    }
-                }
-            }
+                else if (!BCrypt.Net.BCrypt.Verify(changePasswordDto.CurrentPassword, user.HashPassword))
+                    errors.Add(new ErrorField { Field = "CurrentPassword", ErrorMessage = "CurrentPassword is not correct" });
 
+                if (string.IsNullOrWhiteSpace(changePasswordDto.NewPassword))
+                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "NewPassword is required" });
+                else if (!Regex.IsMatch(changePasswordDto.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$"))
+                    errors.Add(new ErrorField { Field = "NewPassword", ErrorMessage = "Password must have at least 8 characters, including uppercase, lowercase, number, and special character." });
+            }
 
             if (errors.Any())
-            {
                 return Result<User>.Failure(errors);
-            }
 
             user.HashPassword = BCrypt.Net.BCrypt.HashPassword(changePasswordDto.NewPassword);
+            user.PasswordChangedAt = DateTime.UtcNow;
 
             try
             {
@@ -195,15 +188,23 @@ namespace Application.Services.Implement
             }
             catch (Exception)
             {
+                
                 return Result<User>.Failure("An error occurred while changing the password.");
             }
-        
+
             return Result<User>.Success(null, "Change password successful");
         }
-
         public async Task<Result<string>> UpdateAvatar(UpdateAvatarDto upDateAvatarDto)
         {
-            var user = await _unitOfWork.UserRepositories.GetByIdAsync(upDateAvatarDto.UserId);
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;
+            if (userIdClaim == null)
+            {
+                return Result<string>.Failure("Invalid token");
+
+            }
+            var userId = int.Parse(userIdClaim);
+
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
 
             if(user == null)
             {
@@ -213,20 +214,52 @@ namespace Application.Services.Implement
             {
                 return Result<string>.Failure("Invalid avatar file");
             }
+            var extension = Path.GetExtension(upDateAvatarDto.Avatar.FileName);
+            var fileName = $"avatar_{user.Id}{extension}";
 
-            var imageUrl = await _cloudStorageService.UploadFileAsync(upDateAvatarDto.Avatar);
+            var oldAvatar = user.Avatar;        
+
+            var imageUrl = await _cloudStorageService.UploadFileAsync(upDateAvatarDto.Avatar, fileName);
 
             if (!imageUrl.IsSuccess)
             {
                 return Result<string>.Failure($"Failed to upload avatar: {imageUrl.Data}");
             }
-
+ 
             user.Avatar = imageUrl.Data;
             await _unitOfWork.UserRepositories.UpdateAsync(user);
             await _unitOfWork.SaveChangesAsync();
 
-
             return Result<string>.Success(imageUrl.Data, "Update avatar successful");
+        }
+        public async Task<Result<string>> SetAvatarDefault()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;
+            if (userIdClaim == null)
+            {
+                return Result<string>.Failure("Invalid token");
+            }
+            var userId = int.Parse(userIdClaim);
+
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(userId);
+            if (user == null)
+            {
+                return Result<string>.Failure("User not found");
+            }
+            var oldAvatar = user.Avatar;
+            var defaultAvatarUrl = "https://res.cloudinary.com/dew9go5as/image/upload/v1756093480/default-avatar_rxyvxb.png";
+        
+            user.Avatar = defaultAvatarUrl;
+
+            await _unitOfWork.UserRepositories.UpdateAsync(user);
+            await _unitOfWork.SaveChangesAsync();
+
+            if (!string.IsNullOrEmpty(oldAvatar) && oldAvatar != defaultAvatarUrl)
+            {
+                await _cloudStorageService.DeleteFileAsync(oldAvatar);
+            }
+
+            return Result<string>.Success(defaultAvatarUrl, "Set avatar to default successful");
         }
     }
 

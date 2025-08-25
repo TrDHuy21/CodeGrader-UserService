@@ -37,6 +37,8 @@ namespace Infrastructure.Context
                     Birthday = new DateOnly(1900, 1, 1),
                     GithubLink = "",
                     LinkedInLink = "",
+                    IsActive = true,
+                    PasswordChangedAt = null,
                     Bio = "Admin user bio",
                     RoleId = 1                  
                 },
@@ -53,6 +55,8 @@ namespace Infrastructure.Context
                     Birthday = new DateOnly(1900, 1, 1),
                     GithubLink = "",
                     LinkedInLink = "",
+                    IsActive = true,
+                    PasswordChangedAt = null,
                     Bio = "Regular user bio",
                     RoleId = 2
                 }

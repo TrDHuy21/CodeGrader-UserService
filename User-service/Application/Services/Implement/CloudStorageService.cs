@@ -4,6 +4,7 @@ using CloudinaryDotNet.Actions;
 using Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
+using System.Reflection;
 
 namespace Application.Services.Implement
 {
@@ -22,14 +23,46 @@ namespace Application.Services.Implement
             _cloudinary = new Cloudinary(account);
         }
 
-        public async Task<Result<string>> UploadFileAsync(IFormFile file)
+        public async Task<Result<bool>> DeleteFileAsync(string fileUrl)
+        {
+            if (string.IsNullOrWhiteSpace(fileUrl))
+            {
+                return Result<bool>.Failure("File is required");
+
+            }
+            try
+            {
+                var uri = new Uri(fileUrl);
+                var segments = uri.AbsolutePath.Split("/");
+                var filename = segments.Last();
+                var publicId = "avatars/" + Path.GetFileNameWithoutExtension(filename);
+
+                var deletionParams = new DeletionParams(publicId);
+                var result = await _cloudinary.DestroyAsync(deletionParams);
+
+                if (result.Result == "ok" || result.Result == "not found")
+                {
+                    return Result<bool>.Success(true, "Delete file successful");
+                }
+                return Result<bool>.Failure("Delete file failed" + result.Result);
+
+            }
+            catch (Exception ex)
+            {
+                return Result<bool>.Failure("Delete file exception" + ex.Message);
+            }       
+        }
+
+        public async Task<Result<string>> UploadFileAsync(IFormFile file, string fileName)
         {
             await using var stream = file.OpenReadStream();
 
             var uploadParams = new ImageUploadParams
             {
                 File = new FileDescription(file.FileName, stream),
+                PublicId = $"/{fileName}",
                 Folder = "avatars",
+                Overwrite = true,
                 Transformation = new Transformation().Width(300).Height(300).Crop("fill").Gravity("face")
             };
 

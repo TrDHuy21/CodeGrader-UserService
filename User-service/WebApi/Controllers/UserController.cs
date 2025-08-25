@@ -36,12 +36,13 @@ namespace WebApi.Controllers
 
         [Authorize]
         [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword([FromQuery] int userId, [FromBody] ChangePasswordDto changePasswordDto)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto changePasswordDto)
         {
-            var result = await _userService.ChangePassword(userId, changePasswordDto);
+            var result = await _userService.ChangePassword(changePasswordDto);
             return Ok(result);
         }
-        [Authorize]
+
+        //[Authorize]
         [HttpPut("update-avatar")]
         public async Task<IActionResult> UpdateAvatar([FromForm] UpdateAvatarDto upDateAvatarDto)
         {
@@ -49,5 +50,12 @@ namespace WebApi.Controllers
             return Ok(result);
         }
 
+        [Authorize]
+        [HttpPut("set-avatar-default")]
+        public async Task<IActionResult> SetAvatarDefault()
+        {
+            var result = await _userService.SetAvatarDefault();
+            return Ok(result);
+        }
     }
 }

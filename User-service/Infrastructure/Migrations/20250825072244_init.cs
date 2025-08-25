@@ -42,6 +42,8 @@ namespace Infrastructure.Migrations
                     Birthday = table.Column<DateOnly>(type: "date", nullable: true),
                     GithubLink = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
                     LinkedInLink = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    PasswordChangedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     Bio = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     RoleId = table.Column<int>(type: "int", nullable: false, defaultValue: 2)
                 },
@@ -67,11 +69,11 @@ namespace Infrastructure.Migrations
 
             migrationBuilder.InsertData(
                 table: "User",
-                columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "IsEmailConfirmed", "LinkedInLink", "RoleId", "Username" },
+                columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "IsActive", "IsEmailConfirmed", "LinkedInLink", "PasswordChangedAt", "RoleId", "Username" },
                 values: new object[,]
                 {
-                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 23, 9, 9, 45, 492, DateTimeKind.Utc).AddTicks(1773), "admin@gmail.com ", "Admin User", "", "$2a$11$CvBnz6qUTT/nMdDGmg8xveMozm4hF6ribhboSAlDPdB6.zEOQ8tIO", true, "", 1, "admin" },
-                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 23, 9, 9, 45, 608, DateTimeKind.Utc).AddTicks(4346), "user@gmail.com", "Regular User", "", "$2a$11$C.s6dKOA9qpuw7Hz6hnIzOZQbG0s50UekwMi.SfkTR8uHNk1aLF42", true, "", 2, "user" }
+                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 25, 7, 22, 44, 124, DateTimeKind.Utc).AddTicks(1142), "admin@gmail.com ", "Admin User", "", "$2a$11$mOtkdH9PFIixNDPH0X2rVO8S5tcuLfx2M9c6rSt7dpD5lPOPl.SWC", true, true, "", null, 1, "admin" },
+                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 25, 7, 22, 44, 243, DateTimeKind.Utc).AddTicks(7087), "user@gmail.com", "Regular User", "", "$2a$11$YTbIuNJmntsCoXPaVMjkeuwT/l8J6Q8Jye.kxDCX3hsowuMp6jhEu", true, true, "", null, 2, "user" }
                 });
 
             migrationBuilder.CreateIndex(

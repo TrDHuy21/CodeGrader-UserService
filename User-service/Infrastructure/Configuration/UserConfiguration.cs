@@ -49,6 +49,10 @@ namespace Infrastructure.Configuration
             builder.Property(u => u.LinkedInLink)
                 .HasMaxLength(200);
 
+            builder.Property(u => u.IsActive)
+                .IsRequired()
+                .HasDefaultValue(true);
+
             builder.Property(u => u.Bio)
                 .HasMaxLength(500);
 
