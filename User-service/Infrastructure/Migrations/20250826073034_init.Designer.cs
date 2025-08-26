@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(USContext))]
-    [Migration("20250825072244_init")]
+    [Migration("20250826073034_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -24,6 +24,38 @@ namespace Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("Created")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expires")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("Revoked")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefreshToken", (string)null);
+                });
 
             modelBuilder.Entity("Domain.Entities.Role", b =>
                 {
@@ -145,11 +177,11 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar1.png",
                             Bio = "Admin user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 25, 7, 22, 44, 124, DateTimeKind.Utc).AddTicks(1142),
+                            CreatedAt = new DateTime(2025, 8, 26, 7, 30, 32, 842, DateTimeKind.Utc).AddTicks(2243),
                             Email = "admin@gmail.com ",
                             FullName = "Admin User",
                             GithubLink = "",
-                            HashPassword = "$2a$11$mOtkdH9PFIixNDPH0X2rVO8S5tcuLfx2M9c6rSt7dpD5lPOPl.SWC",
+                            HashPassword = "$2a$11$uiq.AsfYNK7bHI31hvmb2e4Yrqn84C1jMPECJe8Cq8J70vjoDLSPa",
                             IsActive = true,
                             IsEmailConfirmed = true,
                             LinkedInLink = "",
@@ -162,17 +194,28 @@ namespace Infrastructure.Migrations
                             Avatar = "https://example.com/avatar2.png",
                             Bio = "Regular user bio",
                             Birthday = new DateOnly(1900, 1, 1),
-                            CreatedAt = new DateTime(2025, 8, 25, 7, 22, 44, 243, DateTimeKind.Utc).AddTicks(7087),
+                            CreatedAt = new DateTime(2025, 8, 26, 7, 30, 33, 16, DateTimeKind.Utc).AddTicks(4478),
                             Email = "user@gmail.com",
                             FullName = "Regular User",
                             GithubLink = "",
-                            HashPassword = "$2a$11$YTbIuNJmntsCoXPaVMjkeuwT/l8J6Q8Jye.kxDCX3hsowuMp6jhEu",
+                            HashPassword = "$2a$11$r53o63j/oAt2mS6ImXJzIe3SwAYr4NniwPwZJIGztgpye/m2NfwZC",
                             IsActive = true,
                             IsEmailConfirmed = true,
                             LinkedInLink = "",
                             RoleId = 2,
                             Username = "user"
                         });
+                });
+
+            modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "User")
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Domain.Entities.User", b =>
@@ -189,6 +232,11 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Role", b =>
                 {
                     b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Domain.Entities.User", b =>
+                {
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

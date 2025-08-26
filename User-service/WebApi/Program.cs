@@ -63,7 +63,8 @@ namespace WebApi
                         ValidateLifetime = true,
                         ValidIssuer = jwt["Issuer"],
                         ValidAudience = jwt["Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(key)
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ClockSkew = TimeSpan.Zero
                     };
                 });
             builder.Services.AddSwaggerGen(c =>

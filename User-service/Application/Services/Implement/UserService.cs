@@ -143,7 +143,6 @@ namespace Application.Services.Implement
 
             return Result<User>.Success(null, "User updated successfully.");
         }
-
         public async Task<Result<User>> ChangePassword(ChangePasswordDto changePasswordDto)
         {
             var userIdClaim = _httpContextAccessor.HttpContext.User.FindFirst("Id")?.Value;

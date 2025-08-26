@@ -58,6 +58,29 @@ namespace Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "RefreshToken",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Token = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Expires = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Created = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Revoked = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshToken", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshToken_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.InsertData(
                 table: "Role",
                 columns: new[] { "Id", "Name" },
@@ -72,9 +95,14 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "IsActive", "IsEmailConfirmed", "LinkedInLink", "PasswordChangedAt", "RoleId", "Username" },
                 values: new object[,]
                 {
-                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 25, 7, 22, 44, 124, DateTimeKind.Utc).AddTicks(1142), "admin@gmail.com ", "Admin User", "", "$2a$11$mOtkdH9PFIixNDPH0X2rVO8S5tcuLfx2M9c6rSt7dpD5lPOPl.SWC", true, true, "", null, 1, "admin" },
-                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 25, 7, 22, 44, 243, DateTimeKind.Utc).AddTicks(7087), "user@gmail.com", "Regular User", "", "$2a$11$YTbIuNJmntsCoXPaVMjkeuwT/l8J6Q8Jye.kxDCX3hsowuMp6jhEu", true, true, "", null, 2, "user" }
+                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 26, 7, 30, 32, 842, DateTimeKind.Utc).AddTicks(2243), "admin@gmail.com ", "Admin User", "", "$2a$11$uiq.AsfYNK7bHI31hvmb2e4Yrqn84C1jMPECJe8Cq8J70vjoDLSPa", true, true, "", null, 1, "admin" },
+                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 26, 7, 30, 33, 16, DateTimeKind.Utc).AddTicks(4478), "user@gmail.com", "Regular User", "", "$2a$11$r53o63j/oAt2mS6ImXJzIe3SwAYr4NniwPwZJIGztgpye/m2NfwZC", true, true, "", null, 2, "user" }
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshToken_UserId",
+                table: "RefreshToken",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Role_Name",
@@ -103,6 +131,9 @@ namespace Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "RefreshToken");
+
             migrationBuilder.DropTable(
                 name: "User");
 

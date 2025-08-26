@@ -12,6 +12,6 @@ namespace Application.Services.Interface
         Task<Result<string>> VerifyOtpAndResetPassword(ResetPasswordDto resetPasswordDto);
         Task<Result<string>> ConfirmEmail(ConfirmEmailDto confirmEmailDto);
         Task<Result<string>> SendOtpEmail(FogotPasswordDto fogotPasswordDto);
-
+        Task<Result<TokenDto>> RefreshToken(string refreshToken);
     }
 }

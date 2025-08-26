@@ -138,7 +138,6 @@ namespace Application.Services.Implement
 
             return Result<UserViewDto>.Success(userViewDto, "Get user by id successfully");
         }
-
         public async Task<Result<UserViewDto>> LockUser(int id)
         {
             var user = await _unitOfWork.UserRepositories.GetByIdAsync(id);
@@ -152,7 +151,6 @@ namespace Application.Services.Implement
             var userDto = _mapper.Map<UserViewDto>(user);
             return Result<UserViewDto>.Success(userDto, "User locked successfully");
         }
-
         public async Task<Result<UserViewDto>> UnlockUser(int id)
         {
             var user = await _unitOfWork.UserRepositories.GetByIdAsync(id);
@@ -167,7 +165,6 @@ namespace Application.Services.Implement
             var userDto = _mapper.Map<UserViewDto>(user);
             return Result<UserViewDto>.Success(userDto, "User uncloked successfully");
         }
-
         public async Task<Result<UserViewDto>> UpdateUser(UserUpdateByAdminDto dto)
         {
             var errors = new List<ErrorField>();

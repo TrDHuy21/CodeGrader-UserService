@@ -7,6 +7,7 @@ namespace Infrastructure.UnitOfWork
     {
         IUserRepository UserRepositories {get;}
         IRoleRepository RoleRepositories {get; }
+        IRefreshTokenRepository RefreshTokenRepositories {get; }
         Task<int> SaveChangesAsync(); 
 
     }   

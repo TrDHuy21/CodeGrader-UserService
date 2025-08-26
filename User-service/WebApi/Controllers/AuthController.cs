@@ -3,6 +3,7 @@ using Application.Dtos.UserDto;
 using Application.Services.Implement;
 using Application.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace WebApi.Controllers
 {
@@ -52,6 +53,13 @@ namespace WebApi.Controllers
         public async Task<IActionResult> SendOtpEmail(FogotPasswordDto fogotPasswordDto)
         {
             var result = await _authService.SendOtpEmail(fogotPasswordDto);
+            return Ok(result);
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken(RefreshTokenDto refreshTokenDto)
+        {
+            var result = await _authService.RefreshToken(refreshTokenDto.Token);
             return Ok(result);
         }
     }

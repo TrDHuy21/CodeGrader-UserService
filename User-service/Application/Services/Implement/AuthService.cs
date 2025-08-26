@@ -2,6 +2,7 @@
 using Application.Dtos.UserDto;
 using Application.Services.Interface;
 using AutoMapper;
+using Azure.Core;
 using Common;
 using Domain.Entities;
 using Infrastructure.Context;
@@ -14,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -88,13 +90,25 @@ namespace Application.Services.Implement
                     new Claim("Username", user.Username),
                     new Claim(ClaimTypes.Role, roleName)
                 }),
-                Expires = DateTime.UtcNow.AddHours(1),
+                Expires = DateTime.UtcNow.AddMinutes(1),
                 Audience = _configuration["Jwt:Audience"],
                 Issuer = _configuration["Jwt:Issuer"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
+
+            // Lưu refresh token vào database
+            var refreshToken = new RefreshToken
+            {
+                Token = GenerateRefreshToken(),
+                Expires = DateTime.UtcNow.AddDays(7),
+                Created = DateTime.UtcNow,
+                UserId = user.Id
+            };
+            await _unitOfWork.RefreshTokenRepositories.AddAsync(refreshToken);
+            await _unitOfWork.SaveChangesAsync();
+
 
             return Result<LoginResponse>.Success(new LoginResponse
             {
@@ -110,7 +124,9 @@ namespace Application.Services.Implement
                 },
                 tokenDto = new TokenDto
                 {
-                    AccessToken = tokenString
+                    AccessToken = tokenString,
+                    RefreshToken = refreshToken.Token
+
                 }
             }, "Login successful");
         }
@@ -329,5 +345,72 @@ namespace Application.Services.Implement
 
             return Result<string>.Success(null, "OTP has been sent to your email");
         }
+        public string GenerateRefreshToken()
+        {
+            var randomBytes = new byte[64];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(randomBytes);
+            return  Convert.ToBase64String(randomBytes);
+        }
+        public async Task<Result<TokenDto>> RefreshToken(string refreshToken)
+        {
+            var token = await _unitOfWork.RefreshTokenRepositories.GetByToken(refreshToken);
+
+            if(token == null || token.Revoked != null || token.Expires < DateTime.UtcNow)
+                return Result<TokenDto>.Failure("Invalid refresh token");
+
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(token.UserId);
+
+            if (user == null)
+                return Result<TokenDto>.Failure("User not found");
+
+            var roleName = _uSContext.Role
+                .Where(us => us.Id == user.RoleId)
+                .Select(us => us.Name)
+                .FirstOrDefault();
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+            var tokenDescriptor = new SecurityTokenDescriptor()
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                    new Claim("Id", user.Id.ToString()),
+                    new Claim("Username", user.Username),
+                    new Claim(ClaimTypes.Role, roleName)
+                }),
+                Issuer = _configuration["Jwt:Issuer"],
+                Audience = _configuration["Jwt:Audience"],
+                Expires = DateTime.UtcNow.AddMinutes(1),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            var tokenObj = tokenHandler.CreateToken(tokenDescriptor);
+
+            var accessToken = tokenHandler.WriteToken(tokenObj);
+
+            token.Revoked = DateTime.UtcNow;
+            await _unitOfWork.RefreshTokenRepositories.UpdateAsync(token);
+            await _unitOfWork.SaveChangesAsync();
+            var newRefreshToken = new RefreshToken
+            {
+                Token = GenerateRefreshToken(),
+                Expires = DateTime.UtcNow.AddDays(7),
+                Created = DateTime.UtcNow,
+                UserId = user.Id
+            };
+            await _unitOfWork.RefreshTokenRepositories.AddAsync(newRefreshToken);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<TokenDto>.Success( new TokenDto
+            {
+                AccessToken = accessToken,
+                RefreshToken = newRefreshToken.Token
+            }, "Token refreshed successfully");
+
+        }
+
+       
     }
 }

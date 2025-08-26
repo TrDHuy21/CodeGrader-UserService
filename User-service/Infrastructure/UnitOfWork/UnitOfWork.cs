@@ -15,11 +15,12 @@ namespace Infrastructure.UnitOfWork
             _context = context;
             UserRepositories = new UserRepository(_context);
             RoleRepositories = new RoleRepository(_context);
+            RefreshTokenRepositories = new RefreshTokenRepository(_context);
         }
 
         public IUserRepository UserRepositories { get; }
-
         public IRoleRepository RoleRepositories { get; }
+        public IRefreshTokenRepository RefreshTokenRepositories { get; }
 
         public void Dispose()
         {
