@@ -90,7 +90,7 @@ namespace Application.Services.Implement
                     new Claim("Username", user.Username),
                     new Claim(ClaimTypes.Role, roleName)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddHours(1),
                 Audience = _configuration["Jwt:Audience"],
                 Issuer = _configuration["Jwt:Issuer"],
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -408,9 +408,6 @@ namespace Application.Services.Implement
                 AccessToken = accessToken,
                 RefreshToken = newRefreshToken.Token
             }, "Token refreshed successfully");
-
-        }
-
-       
+        }     
     }
 }
