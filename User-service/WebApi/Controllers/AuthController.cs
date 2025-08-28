@@ -63,5 +63,12 @@ namespace WebApi.Controllers
             var result = await _authService.RefreshToken(refreshTokenDto.Token);
             return Ok(result);
         }
+
+        [HttpPut("logout")]
+        public async Task<IActionResult> Logout(string refreshToken)
+        {
+            var result = await _authService.LogOut(refreshToken);
+            return Ok(result);
+        }
     }
 }

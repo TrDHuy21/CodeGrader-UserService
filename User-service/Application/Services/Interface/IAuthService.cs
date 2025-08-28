@@ -13,5 +13,6 @@ namespace Application.Services.Interface
         Task<Result<string>> ConfirmEmail(ConfirmEmailDto confirmEmailDto);
         Task<Result<string>> SendOtpEmail(FogotPasswordDto fogotPasswordDto);
         Task<Result<TokenDto>> RefreshToken(string refreshToken);
+        Task<Result<string>> LogOut(string refreshToken);
     }
 }

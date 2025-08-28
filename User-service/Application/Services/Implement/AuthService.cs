@@ -408,6 +408,20 @@ namespace Application.Services.Implement
                 AccessToken = accessToken,
                 RefreshToken = newRefreshToken.Token
             }, "Token refreshed successfully");
-        }     
+        }
+
+        public async Task<Result<string>> LogOut(string refreshToken)
+        {
+           var token = await _unitOfWork.RefreshTokenRepositories.GetByToken(refreshToken);
+            
+           if(token == null)
+            {
+                return Result<string>.Failure("Refresh token not found");
+            }
+            token.Revoked = DateTime.UtcNow;
+            await _unitOfWork.RefreshTokenRepositories.UpdateAsync(token);
+            await _unitOfWork.SaveChangesAsync();
+            return Result<string>.Success(null,"Revoke refresh token successfully");
+        }
     }
 }
