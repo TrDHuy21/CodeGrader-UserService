@@ -29,7 +29,7 @@ namespace Infrastructure.Context
                 new User
                 {
                     Id = 1,
-                    Avatar = "https://example.com/avatar1.png",
+                    Avatar = "https://res.cloudinary.com/dew9go5as/image/upload/v1756366531/avatars/avatar_2.jpg.jpg",
                     Username = "admin",
                     FullName = "Admin User",
                     Email = "admin@gmail.com ",
@@ -47,7 +47,7 @@ namespace Infrastructure.Context
                 new User
                 {
                     Id = 2,
-                    Avatar = "https://example.com/avatar2.png",
+                    Avatar = "https://res.cloudinary.com/dew9go5as/image/upload/v1756135916/avatars/avatar_6.jpg.jpg",
                     Username = "user",
                     FullName = "Regular User",
                     Email = "user@gmail.com",

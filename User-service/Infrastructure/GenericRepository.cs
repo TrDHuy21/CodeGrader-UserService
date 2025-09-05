@@ -28,7 +28,7 @@ namespace Infrastructure
             return Task.CompletedTask;
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync()
+        public virtual async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _USContext.Set<T>().ToListAsync();
         }

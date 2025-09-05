@@ -95,8 +95,8 @@ namespace Infrastructure.Migrations
                 columns: new[] { "Id", "Avatar", "Bio", "Birthday", "CreatedAt", "Email", "FullName", "GithubLink", "HashPassword", "IsActive", "IsEmailConfirmed", "LinkedInLink", "PasswordChangedAt", "RoleId", "Username" },
                 values: new object[,]
                 {
-                    { 1, "https://example.com/avatar1.png", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 26, 7, 30, 32, 842, DateTimeKind.Utc).AddTicks(2243), "admin@gmail.com ", "Admin User", "", "$2a$11$uiq.AsfYNK7bHI31hvmb2e4Yrqn84C1jMPECJe8Cq8J70vjoDLSPa", true, true, "", null, 1, "admin" },
-                    { 2, "https://example.com/avatar2.png", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 8, 26, 7, 30, 33, 16, DateTimeKind.Utc).AddTicks(4478), "user@gmail.com", "Regular User", "", "$2a$11$r53o63j/oAt2mS6ImXJzIe3SwAYr4NniwPwZJIGztgpye/m2NfwZC", true, true, "", null, 2, "user" }
+                    { 1, "https://res.cloudinary.com/dew9go5as/image/upload/v1756366531/avatars/avatar_2.jpg.jpg", "Admin user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 9, 5, 2, 25, 25, 479, DateTimeKind.Utc).AddTicks(1901), "admin@gmail.com ", "Admin User", "", "$2a$11$KlaVqcSxdnwYRX1vDbfq/.9iJlgraBMMfDVIcyEofprVox3y3s5Qy", true, true, "", null, 1, "admin" },
+                    { 2, "https://res.cloudinary.com/dew9go5as/image/upload/v1756135916/avatars/avatar_6.jpg.jpg", "Regular user bio", new DateOnly(1900, 1, 1), new DateTime(2025, 9, 5, 2, 25, 25, 651, DateTimeKind.Utc).AddTicks(9865), "user@gmail.com", "Regular User", "", "$2a$11$/nh.2eoBw.ZufU8cykAgP./j5y.CtAxHTDqfGor4qLs62Hhw3jhLS", true, true, "", null, 2, "user" }
                 });
 
             migrationBuilder.CreateIndex(

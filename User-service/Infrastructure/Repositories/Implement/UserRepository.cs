@@ -15,5 +15,11 @@ namespace Infrastructure.Repositories.Implement
         {
             return await _USContext.User.FirstOrDefaultAsync(us => us.Username == username);
         }
+        public override async Task<IEnumerable<User>> GetAllAsync()
+        {
+            return await _USContext.User
+                .Where(u => u.RoleId == 2)
+                .ToListAsync();
+        }
     }
 }
