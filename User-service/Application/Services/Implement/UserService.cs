@@ -258,6 +258,18 @@ namespace Application.Services.Implement
 
             return Result<string>.Success(defaultAvatarUrl, "Set avatar to default successful");
         }
+
+        public async Task<Result<UserViewDto>> GetProfileByUserId(int UserId)
+        {
+            var user = await _unitOfWork.UserRepositories.GetByIdAsync(UserId);
+            if (user == null)
+            {
+                return Result<UserViewDto>.Failure("User not found");
+            }
+            var userViewDto = _mapper.Map<UserViewDto>(user);   
+
+            return Result<UserViewDto>.Success(userViewDto, "Get profile by id successfully");
+        }
     }
 
 }

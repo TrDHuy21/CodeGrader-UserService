@@ -57,5 +57,12 @@ namespace WebApi.Controllers
             var result = await _userService.SetAvatarDefault();
             return Ok(result);
         }
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetProfileByUserId([FromRoute] int userId)
+        {
+            var result = await _userService.GetProfileByUserId(userId);
+            return Ok(result);
+        }
+
     }
 }
